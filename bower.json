@@ -1,0 +1,4 @@
+{
+  "name": "g.raphael",
+  "main": ["g.raphael.js, "g.pie.js"]
+}
