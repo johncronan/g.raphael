@@ -26,7 +26,6 @@
  o maxSlices (number) a threshold for how many slices should be rendered before collapsing all remaining slices into 1 additional slice (to focus on most important data points). [default `100`]
  o stroke (string) color of the circle stroke in HTML color format [default `"#FFF"`]
  o strokewidth (integer) width of the chart stroke [default `1`]
- o init (boolean) whether or not to show animation when the chart is ready [default `false`]
  o colors (array) colors be used to plot the chart
  o href (array) urls to to set up clicks on chart slices
  o legend (array) array containing strings that will be used in a legend. Other label options work if legend is defined.
@@ -94,12 +93,16 @@
                 total += values[i];
                 values[i] = { value: values[i], order: i, valueOf: function () { return this.value; } };
             }
+            opts.otherothers && (total += opts.otherothers);
             
             //values are sorted numerically
             values.sort(function (a, b) {
                 return b.value - a.value;
             });
             
+            opts.otherothers && values.push({ value: opts.otherothers, order: len, others: true, valueOf: function() { return this.value; } })
+              && (len += 1);
+
             for (i = 0; i < len; i++) {
                 if (defcut && values[i] * 100 / total < minPercent) {
                     cut = i;
@@ -125,20 +128,16 @@
                     mangle = angle - 360 * values[i] / total / 2;
                 }
 
-                if (opts.init) {
-                    var ipath = sector(cx, cy, 1, angle, angle - 360 * values[i] / total).join(",");
-                }
-
                 var path = sector(cx, cy, r, angle, angle -= 360 * values[i] / total);
                 var j = (opts.matchColors && opts.matchColors == true) ? values[i].order : i;
-                var p = paper.path(opts.init ? ipath : path).attr({ fill: opts.colors && opts.colors[j] || chartinst.colors[j] || "#666", stroke: opts.stroke || "#fff", "stroke-width": (opts.strokewidth == null ? 1 : opts.strokewidth), "stroke-linejoin": "round" });
+                
+                var p = paper.path(path).attr({ fill: opts.colors && opts.colors[j] || chartinst.colors[j] || "#666", stroke: opts.stroke || "#fff", "stroke-width": (opts.strokewidth == null ? 1 : opts.strokewidth), "stroke-linejoin": "round" });
 
                 p.value = values[i];
                 p.middle = path.middle;
                 p.mangle = mangle;
                 sectors.push(p);
                 series.push(p);
-                opts.init && p.animate({ path: path.join(",") }, (+opts.init - 1) || 1000, ">");
             }
 
             for (i = 0; i < len; i++) {
@@ -255,7 +254,7 @@
                 labels[j] = chartinst.labelise(labels[j], values[i], total);
                 chart.labels.push(paper.set());
                 chart.labels[i].push(paper[mark](x + 5, h, 5).attr({ fill: clr, stroke: "none" }));
-                chart.labels[i].push(txt = paper.text(x + 20, h, labels[j] || values[j]).attr(chartinst.txtattr).attr({ fill: opts.legendcolor || "#000", "text-anchor": "start"}));
+                chart.labels[i].push(txt = paper.text(x + 20, h, labels[j] || values[j]).attr({ fill: opts.legendcolor || "#000", "font-size": "12px", "text-anchor": "start"}));
                 covers[i].label = chart.labels[i];
                 h += txt.getBBox().height * 1.2;
             }
