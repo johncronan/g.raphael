@@ -57,7 +57,10 @@
             others = 0,
             cut = opts.maxSlices || 100,
             minPercent = parseFloat(opts.minPercent) || 1,
-            defcut = Boolean( minPercent );
+            defcut = Boolean( minPercent ),
+            donut = opts.donut || false,
+            donutDiameter = opts.donutDiameter || 0.6,
+            donutFill = opts.donutFill || "#FFFFFF";
 
         function sector(cx, cy, r, startAngle, endAngle, fill) {
             var rad = Math.PI / 180,
@@ -153,6 +156,13 @@
                 covers.push(p);
                 series.push(p);
             }
+        }
+        
+        if (donut) {
+            var donutRadius = r * donutDiameter;
+            series.push(paper.circle(cx, cy, donutRadius).attr({
+                fill: donutFill, stroke: opts.stroke || donutFill, opacity: 1
+            }));
         }
 
         chart.hover = function (fin, fout) {
