@@ -118,7 +118,13 @@
             }
 
             len = Math.min(cut + 1, values.length);
-            others && values.splice(len) && (values[cut].others = true);
+            others && values.splice(len) && (values[cut].others = true) && (values[cut].order = 100);
+            
+            if (opts.sort == false) {
+                values.sort(function(a, b) {
+                    return a.order - b.order;
+                });
+            }
 
             for (i = 0; i < len; i++) {
                 var mangle = angle - 360 * values[i] / total / 2;
