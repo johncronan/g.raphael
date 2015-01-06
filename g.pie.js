@@ -1,5 +1,5 @@
 /*!
- * g.Raphael 0.51 - Charting library, based on Raphaël
+ * g.Raphael 0.51 - Charting library, based on Raphael
  *
  * Copyright (c) 2009-2012 Dmitry Baranovskiy (http://g.raphaeljs.com)
  * Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license.
@@ -209,9 +209,9 @@
                         cover: cover,
                         cx: cx,
                         cy: cy,
-                        x: sector.middle.x,
-                        y: sector.middle.y,
-                        mangle: sector.mangle,
+                        x: sector ? sector.middle.x : null,
+                        y: sector ? sector.middle.y : null,
+                        mangle: sector ? sector.mangle : null,
                         r: r,
                         value: values[j],
                         total: total,
