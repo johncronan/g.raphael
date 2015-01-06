@@ -17,7 +17,10 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
         total = 0,
         others = 0,
         cut = 9,
-        defcut = true;
+        defcut = true,
+        donut = opts.donut || false,
+        donutDiameter = opts.donutDiameter || 0.6,
+        donutFill = opts.donutFill || "#FFFFFF";
     chart.covers = covers;
     if (len == 1) {
         series.push(this.circle(cx, cy, r).attr({fill: this.g.colors[0], stroke: opts.stroke || "#fff", "stroke-width": opts.strokewidth == null ? 1 : opts.strokewidth}));
@@ -43,9 +46,15 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
             total += values[i];
             values[i] = {value: values[i], order: i, valueOf: function () { return this.value; }};
         }
+        opts.otherothers && (total += opts.otherothers);
+        
         values.sort(function (a, b) {
             return b.value - a.value;
         });
+        
+        opts.otherothers && values.push({ value: opts.otherothers, order: len, others: true, valueOf: function() { return this.value; } })
+          && (len += 1);
+        
         for (i = 0; i < len; i++) {
             if (defcut && values[i] * 360 / total <= 1.5) {
                 cut = i;
@@ -59,25 +68,36 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
             }
         }
         len = Math.min(cut + 1, values.length);
-        others && values.splice(len) && (values[cut].others = true);
+        others && values.splice(len) && (values[cut].others = true) && (values[cut].order = 100);
+
+        if (opts.sort == false) {
+            values.sort(function(a, b) {
+                return a.order - b.order;
+            });
+        }
+        
         for (i = 0; i < len; i++) {
             var mangle = angle - 360 * values[i] / total / 2;
             if (!i) {
                 angle = 90 - mangle;
                 mangle = angle - 360 * values[i] / total / 2;
             }
-            if (opts.init) {
-                var ipath = sector(cx, cy, 1, angle, angle - 360 * values[i] / total).join(",");
-            }
             var path = sector(cx, cy, r, angle, angle -= 360 * values[i] / total);
-            var p = this.path(opts.init ? ipath : path).attr({fill: opts.colors && opts.colors[i] || this.g.colors[i] || "#666", stroke: opts.stroke || "#fff", "stroke-width": (opts.strokewidth == null ? 1 : opts.strokewidth), "stroke-linejoin": "round"});
+            var p = this.path(path).attr({fill: opts.colors && opts.colors[i] || this.g.colors[i] || "#666", stroke: opts.stroke || "#fff", "stroke-width": (opts.strokewidth == null ? 1 : opts.strokewidth), "stroke-linejoin": "round"});
             p.value = values[i];
             p.middle = path.middle;
             p.mangle = mangle;
             sectors.push(p);
             series.push(p);
-            opts.init && p.animate({path: path.join(",")}, (+opts.init - 1) || 1000, ">");
         }
+        
+        if (donut) {
+            var donutRadius = r * donutDiameter;
+            series.push(paper.circle(cx, cy, donutRadius).attr({
+                fill: donutFill, stroke: opts.stroke || donutFill, opacity: 1
+            }));
+        }
+        
         for (i = 0; i < len; i++) {
             p = paper.path(sectors[i].attr("path")).attr(this.g.shim);
             opts.href && opts.href[i] && p.attr({href: opts.href[i]});
@@ -99,7 +119,9 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
                     cy: cy,
                     mx: sector.middle.x,
                     my: sector.middle.y,
-                    mangle: sector.mangle,
+                    x: sector ? sector.middle.x : null,
+                    y: sector ? sector.middle.y : null,
+                    mangle: sector ? sector.mangle : mangle,
                     r: r,
                     value: values[j],
                     total: total,
@@ -181,7 +203,7 @@ Raphael.fn.g.piechart = function (cx, cy, r, values, opts) {
             labels[j] = paper.g.labelise(labels[j], values[i], total);
             chart.labels.push(paper.set());
             chart.labels[i].push(paper.g[mark](x + 5, h, 5).attr({fill: clr, stroke: "none"}));
-            chart.labels[i].push(txt = paper.text(x + 20, h, labels[j] || values[j]).attr(paper.g.txtattr).attr({fill: opts.legendcolor || "#000", "text-anchor": "start"}));
+            chart.labels[i].push(txt = paper.text(x + 20, h, labels[j] || values[j]).attr({fill: opts.legendcolor || "#000", "font-size": "12px", "text-anchor": "start"}));
             covers[i].label = chart.labels[i];
             h += txt.getBBox().height * 1.2;
         }
